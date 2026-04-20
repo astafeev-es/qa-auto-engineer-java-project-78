@@ -1,35 +1,47 @@
 package hexlet.code;
 
-import picocli.CommandLine;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
-import picocli.CommandLine.Parameters;
+import hexlet.code.schemas.BaseSchema;
+import java.util.HashMap;
+import java.util.Map;
 
-import java.util.concurrent.Callable;
-
-@Command(name = "gendiff", mixinStandardHelpOptions = true, version = "gendiff 1.0",
-        description = "Compares two configuration files and shows a difference.")
-public final class App implements Callable<Integer> {
-
-    @Parameters(index = "0", paramLabel = "filepath1", description = "path to first file")
-    private String filePath1;
-
-    @Parameters(index = "1", paramLabel = "filepath2", description = "path to second file")
-    private String filePath2;
-
-    @Option(names = {"-f", "--format"}, paramLabel = "format", defaultValue = "stylish",
-            description = "output format [default: ${DEFAULT-VALUE}]")
-    private String format;
-
+public final class App {
     public static void main(String[] args) {
-        int exitCode = new CommandLine(new App()).execute(args);
-        System.exit(exitCode);
-    }
+        Validator v = new Validator();
 
-    @Override
-    public Integer call() throws Exception {
-        String result = "";
-        System.out.println(result);
-        return 0;
+        // StringSchema examples
+        var stringSchema = v.string();
+        System.out.println("String valid (empty): " + stringSchema.isValid("")); // true
+        stringSchema.required();
+        System.out.println("String valid (required + empty): " + stringSchema.isValid("")); // false
+        stringSchema.minLength(5).contains("hexlet");
+        System.out.println("String valid ('hexlet'): " + stringSchema.isValid("hexlet")); // true
+
+        // NumberSchema examples
+        var numberSchema = v.number();
+        System.out.println("Number valid (null): " + numberSchema.isValid(null)); // true
+        numberSchema.required().positive().range(10, 20);
+        System.out.println("Number valid (15): " + numberSchema.isValid(15)); // true
+        System.out.println("Number valid (-5): " + numberSchema.isValid(-5)); // false
+
+        // MapSchema examples
+        var mapSchema = v.map();
+        System.out.println("Map valid (null): " + mapSchema.isValid(null)); // true
+        mapSchema.required().sizeof(2);
+        Map<String, String> data = new HashMap<>();
+        data.put("key1", "value1");
+        data.put("key2", "value2");
+        System.out.println("Map valid (2 items): " + mapSchema.isValid(data)); // true
+
+        // Shape example
+        var shapeSchema = v.map();
+        Map<String, BaseSchema<?>> schemas = new HashMap<>();
+        schemas.put("name", v.string().required());
+        schemas.put("age", v.number().positive());
+        shapeSchema.shape(schemas);
+
+        Map<String, Object> human1 = new HashMap<>();
+        human1.put("name", "Kolya");
+        human1.put("age", 100);
+        System.out.println("Shape human1 valid: " + shapeSchema.isValid(human1)); // true
     }
 }
