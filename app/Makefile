@@ -1,13 +1,7 @@
-.PHONY: build install run-dist test report lint check
+.PHONY: build test report lint check
 
 build:
-	./gradlew clean build installDist
-
-install:
-	./gradlew clean installDist
-
-run-dist:
-	./build/install/app/bin/app $(ARGS)
+	./gradlew clean build
 
 test:
 	./gradlew test
